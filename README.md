@@ -7,7 +7,7 @@ Tener Node.js instalado en el sistema.
 
 ### Pasos para ejecutar:
 1. Abrir una terminal en la carpeta donde se encuentra `sistema.js`.
-2. Ejecutar `npm install @tensorflow/tfjs-node` para instalar la dependencia del modelo.
+2. Ejecutar `npm install` para instalar las dependencias correctamente configuradas en el package.json.
 3. Iniciar el backend ejecutando el comando: `node sistema.js`
 4. Confirmar en la consola que el servidor corre en el puerto 8008.
 5. Abrir el archivo `index.html` en cualquier navegador web.
@@ -21,6 +21,6 @@ Tener Node.js instalado en el sistema.
 5. La web utiliza MobileNet para clasificar la imagen y consulta la API gratuita de Wikipedia para mostrar la descripción del animal.
 
 ## Notas generales
-- No es necesario incluir `node_modules` ni librerías extra.
-- `index.html` es el frontend para el ejercicio 5 y requiere el backend `sistema.js` en el puerto `8008`.
-- `ejercicio.html` es independiente y puede abrirse directamente en el navegador.
+- No se incluye la carpeta `node_modules` cumpliendo con las consignas de entrega.
+- `index.html` es el frontend para el Ejercicio 5 y requiere que el backend `sistema.js` esté corriendo en el puerto `8008`.
+- `ejercicio.html` es el frontend para el Ejercicio 6, es totalmente independiente y corre directamente en el navegador sin necesidad de servidor local.
