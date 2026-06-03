@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ejercicio B2 - y = 2x - 3</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #152e14, #09110b 45%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .page-header {
+      text-align: center;
+      max-width: 620px;
+      margin-bottom: 1.8rem;
+      padding: 1.2rem 1.4rem;
+      background: rgba(15,26,15,0.75);
+      border: 1px solid rgba(74,222,128,0.15);
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    h1 { font-size: 1.8rem; letter-spacing: .06em; color: #a7f3d0; margin-bottom: .6rem; }
+    .subtitle { font-size: 1rem; color: #c7d2fe; margin-bottom: 0; }
+    .card {
+      background: rgba(10,26,10,0.9);
+      border: 1px solid rgba(74,222,128,0.15);
+      border-radius: 22px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.24);
+    }
+    label { font-size: .9rem; color: #9ca3af; display: block; margin-bottom: .5rem; }
+    input[type="number"] {
+      width: 100%;
+      padding: .85rem 1rem;
+      background: #0f1a0f;
+      border: 1px solid #1a4020;
+      border-radius: 12px;
+      color: #e5e7eb;
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    input[type="number"]:focus {
+      border-color: #34d399;
+      box-shadow: 0 0 0 4px rgba(52,211,153,0.12);
+    }
+    .btn-group { display: flex; gap: .9rem; flex-wrap: wrap; }
+    button {
+      flex: 1;
+      min-width: 130px;
+      padding: .78rem 1rem;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: .95rem;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .15s ease, opacity .15s ease, filter .15s ease;
+    }
+    button:hover { transform: translateY(-1px); opacity: .95; }
+    #btn-train { background: linear-gradient(135deg,#16a34a,#22c55e); color: #08120a; }
+    #btn-predict { background: linear-gradient(135deg,#4ade80,#86efac); color: #0f172a; }
+    #resultado {
+      font-size: 1rem;
+      color: #fef3c7;
+      min-height: 1.6rem;
+      text-align: center;
+      border-top: 1px solid rgba(74,222,128,0.15);
+      padding-top: .9rem;
+    }
+    .canvas-container {
+      width: 100%;
+      background: #08110b;
+      border: 1px solid rgba(74,222,128,0.14);
+      border-radius: 16px;
+      margin-top: .8rem;
+      padding: .9rem;
+    }
+    @media (max-width: 540px) {
+      body { padding: 1rem; }
+      .card { padding: 1.4rem; }
+      .page-header { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>&#9881; Ejercicio B2 - Modelo Lineal</h1>
+    <p class="subtitle">El modelo aprende la fórmula <code>y = 2x - 3</code> con una interfaz más clara.</p>
+  </div>
+
+  <div class="card">
+    <div>
+      <label>Paso 1 - Entrenamiento</label>
+      <div class="btn-group">
+        <button id="btn-train">Entrenar modelo</button>
+      </div>
+      <div class="canvas-container">
+        <canvas id="lossChart"></canvas>
+      </div>
+    </div>
+    <div>
+      <label for="input-x">Paso 2 - Ingresa un valor de X para predecir</label>
+      <input type="number" id="input-x" placeholder="Ej: 10" />
+    </div>
+    <div class="btn-group">
+      <button id="btn-predict">Predecir Y</button>
+    </div>
+    <div id="resultado">- Resultado aqui -</div>
+  </div>
+  <script>
+
+    const btnTrain   = document.getElementById('btn-train');
+    const btnPredict = document.getElementById('btn-predict');
+    const inputX     = document.getElementById('input-x');
+    const resultado  = document.getElementById('resultado');
+    let chartInstance= null;
+
+    async function entrenar() {
+      // Escribe tu codigo aqui
+      btnTrain.innerText="Entrenando...";
+      btnTrain.disabled=true;
+      resultado.innerText="Entrenando en el back...";
+
+      try{
+        const response=await fetch('http://localhost:8008/train', {method: 'POST'});
+        const data=await response.json();
+
+        if (data.status==='ok'){
+          resultado.innerText="Modelo entrenando.";
+          renderChart(data.history);
+        
+        } else {
+          resultado.innerText="Error: "+ data.message;
+        }
+      }catch (error){
+        resultado.innerText="Error de red al conectar al servidor.";
+      }
+      btnTrain.innerText="Entrenar modelo";
+      btnTrain.disabled=false;
+
+
+    }
+
+
+    async function predecir() {
+      // Escribe tu codigo aqui
+      const x=parseFloat(inputX.value);
+      if (isNaN(x)) return resultado.innerText="Por favor ingresa un numero.";
+
+      try{
+        const response=await fetch('http://localhost:8008/predict',{
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({x: x})
+        });
+        const data=await response.json();
+        if (data.status==='ok'){
+          resultado.innerText=`Para X = ${data.x}, la prediccion es Y= ${data.y.toFixed(2)}`;
+        }else{
+          resultado.innerText="Error: "+ data.message;
+        }
+      }catch (error){
+        resultado.innerText="Asegurate de entrenar el modelo primero.";
+      }
+    }
+
+    function renderChart(history){
+      const ctx=document.getElementById('lossChart').getContext('2d');
+      const labels=history.map(h=>`Ép. ${h.epoch}`);
+      const dataLoss=history.map(h=>h.loss);
+
+      if (chartInstance) chartInstance.destroy();
+      chartInstance=new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{label: 'Perdida (MSE)', data: dataLoss, borderColor: '#4ade80', backgroundColor: '#4ade80', borderWidth: 2, pointRadius: 0}]
+        },
+        options: { scales: { x: { display: false } }, plugins: { legend: { labels: { color: '#e0e0e0' } } } }
+      });
+    }
+
+    btnTrain.addEventListener('click',   entrenar);
+    btnPredict.addEventListener('click', predecir);
+  </script>
+</body>
+</html>

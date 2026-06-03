@@ -1,0 +1,53 @@
+Examen - Seminario de Actualizacion
+Alumno - Rolón Agustín
+
+Tema 3
+
+1 - Cual es la función que inicia el entrenamiento de un modelo (justifique)
+	a- fit
+	b- compile
+	c- addlayer
+	d- Todas
+	c- Ninguna
+
+	La funcio "fit" es el metodo en bibliotecas como TensorFlow que toma los datos de entrenamiento
+	y etiquetas y inicia el ciclo de épocas para ajustar los pesos del modelo y reducir la pérdida.
+
+2 - Cual es el límite de neuronas en las capas ocultas de una red?
+	a- 8
+	b- 24
+	c- 16
+	d- Todas son correctas
+	e- Ninguna es correcta
+
+	Ninguna es correcta ya que no existe un limite estricto, ademas de que el numero de neuronas en una capa 
+	es un hiperparametro que se define segun la cantidad de datos disponibles.
+
+3 - Donde puedo ejecutar javascript ?, justifique su respuesta. 
+	a- Cliente 
+	b- Servidor
+	c- En todos lados 
+
+	En todos lados, originalmente se ejecutaba solo en el cliente sin embargo con un entorno de ejecucion como 
+	node.js se puede ejecutar en el servidor.
+
+4 - Que tipo de aprendizaje utiliza el humano a diario, justifique la respuesta?
+
+El humano utiliza una combinacion de aprendizaje no supervisado y aprendizaje por refuerzo.
+ya que a diario identificamos patrones, agrupamos objetos y deducimos reglas de nuestro entorno sin que se nos de
+etiquetas previas, al mismo tiempo que aprendemos mediante prueba y error ajustando nuestros comportamientos.
+
+
+5 - Se adjuntan dos archivos: un servidor sistema.js y un frontend index.html. 
+    hacer los ajustes necesarios para el el sistema funcione con la  Formula:  y = 2x - 3 y el Backend en el Puerto 8008
+    Agregar la Grafica de perdida. 
+	
+    
+
+6 - El alumno debe crear una página web simple (HTML, CSS y JavaScript) donde se pueda subir una imagen (por ejemplo, de un perro, un gato, un ave) 
+	y la aplicación le devuelva qué animal es con una breve descripción del mismo. 
+	Para ello debe utilizar una API gratuita de internet.
+	
+	
+Entrega de ejercicios: Entregar una carpeta .zip con los dos archivos modificados y un README.md 
+         que explique cómo ejecutar el sistema. No incluir node_modules ni librerias extras solo los archivos con codigo fuente.	

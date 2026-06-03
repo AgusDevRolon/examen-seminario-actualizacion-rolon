@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Clasificador de Animales</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
+  <style>
+    :root {
+      --bg: #fff4c8;
+      --card: #fff9e1;
+      --text: #111111;
+      --muted: #4b4b4b;
+      --button: #16a34a;
+      --button-hover: #15803d;
+      --border: #f0d57b;
+      --shadow: 0 18px 50px rgba(22,163,74,0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      text-align: left;
+    }
+    h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.95rem;
+      color: var(--text);
+    }
+    p {
+      margin: 0 0 1.25rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin-bottom: 1.15rem;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 0.95rem 1rem;
+      background: #fff8d6;
+      border: 1px solid #f3e2a9;
+      border-radius: 14px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    img {
+      width: 100%;
+      max-height: 340px;
+      object-fit: contain;
+      margin: 1rem 0 0;
+      border-radius: 18px;
+      display: none;
+      border: 1px solid #f2e0a4;
+    }
+    button {
+      width: 100%;
+      margin-top: 0.9rem;
+      padding: 0.95rem 1.1rem;
+      background: var(--button);
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      display: none;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(22,163,74,0.24);
+      background: var(--button-hover);
+    }
+    #resultado {
+      margin-top: 1.4rem;
+      font-weight: 600;
+      color: var(--text);
+      min-height: 1.3em;
+    }
+    .text-neon {
+      color: #064e2b;
+      text-shadow: 0 0 12px rgba(16,185,129,0.6);
+    }
+    #descripcion {
+      margin-top: 0.8rem;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 0.96rem;
+      text-align: justify;
+    }
+    @media (max-width: 520px) {
+      body { padding: 1rem; }
+      .container { padding: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>¿Qué animal es?</h2>
+    <p>Sube una imagen de un animal y deja que el clasificador descubra la especie y busque su descripción.</p>
+    <div class="field">
+      <input type="file" id="imageUpload" accept="image/*">
+    </div>
+    <img id="imagePreview" src="" alt="Vista previa">
+    <button id="classifyBtn">Clasificar y buscar descripción</button>
+    <div id="resultado"></div>
+    <div id="descripcion"></div>
+  </div>
+
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const imagePreview = document.getElementById('imagePreview');
+    const classifyBtn = document.getElementById('classifyBtn');
+    const resultado = document.getElementById('resultado');
+    const descripcion = document.getElementById('descripcion');
+
+    let net;
+
+    // Cargar modelo de clasificacion
+    async function app() {
+      resultado.innerText = 'Cargando motor de IA...';
+      net = await mobilenet.load();
+      resultado.innerText = 'Listo. Sube una imagen.';
+    }
+    app();
+
+    // Mostrar imagen subida
+    imageUpload.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = 'block';
+          classifyBtn.style.display = 'inline-block';
+          resultado.innerText = '';
+          descripcion.innerText = '';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    classifyBtn.addEventListener('click', async () => {
+      resultado.innerText = 'Analizando imagen...';
+      descripcion.innerText = '';
+      
+      const result = await net.classify(imagePreview);
+      const animalNameEn = result[0].className.split(',')[0]; 
+      
+      resultado.innerText = `Animal detectado (Inglés): ${animalNameEn}`;
+      descripcion.innerText = 'Traduciendo y buscando el artículo exacto...';
+
+      try {
+        const enSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(`intitle:"${animalNameEn}" animal`)}&utf8=&format=json&origin=*`;
+        const enSearchRes = await fetch(enSearchUrl);
+        const enSearchData = await enSearchRes.json();
+
+        const animalCategoryKeywordsEn = ['animal', 'mammal', 'bird', 'fish', 'reptile', 'amphibian', 'insect', 'carnivore', 'herbivore', 'vertebrate', 'invertebrate', 'feline', 'canine', 'big cat', 'cat'];
+        const animalCategoryKeywordsEs = ['animal', 'mamífero', 'ave', 'pez', 'reptil', 'anfibio', 'insecto', 'carnívoro', 'herbívoro', 'vertebrado', 'invertebrado', 'felino', 'canino', 'gato', 'tigre', 'león'];
+
+        const matchesAnimalCategory = (category, keywords) => {
+          const title = category.toLowerCase();
+          return keywords.some(keyword => title.includes(keyword));
+        };
+
+        const findValidAnimalTitle = async (searchResults, lang) => {
+          const keywords = lang === 'en' ? animalCategoryKeywordsEn : animalCategoryKeywordsEs;
+          for (const item of searchResults.slice(0, 5)) {
+            const categoriesUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&pageids=${item.pageid}&prop=categories&clshow=!hidden&cllimit=50&format=json&origin=*`;
+            const categoriesRes = await fetch(categoriesUrl);
+            const categoriesData = await categoriesRes.json();
+            const page = categoriesData.query.pages[item.pageid];
+            const categories = page.categories ? page.categories.map(c => c.title) : [];
+            if (categories.some(cat => matchesAnimalCategory(cat, keywords))) {
+              return item.title;
+            }
+          }
+          return null;
+        };
+
+        let enTitle = null;
+        if (enSearchData.query.search.length > 0) {
+          enTitle = await findValidAnimalTitle(enSearchData.query.search, 'en');
+        }
+
+        let esTitle = null;
+        if (!enTitle) {
+          const esSearchUrl = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(`intitle:"${animalNameEn}" animal`)}&utf8=&format=json&origin=*`;
+          const esSearchRes = await fetch(esSearchUrl);
+          const esSearchData = await esSearchRes.json();
+          if (esSearchData.query.search.length > 0) {
+            esTitle = await findValidAnimalTitle(esSearchData.query.search, 'es');
+          }
+        }
+
+        if (!enTitle && !esTitle) {
+          descripcion.innerText = 'No se encontró un artículo animal adecuado en Wikipedia.';
+          return;
+        }
+
+        if (!esTitle) {
+          const langUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(enTitle)}&prop=langlinks&lllang=es&format=json&origin=*`;
+          const langRes = await fetch(langUrl);
+          const langData = await langRes.json();
+          const pages = langData.query.pages;
+          const pageId = Object.keys(pages)[0];
+          if (pages[pageId].langlinks && pages[pageId].langlinks.length > 0) {
+            esTitle = pages[pageId].langlinks[0]['*'];
+          }
+        }
+
+        if (!esTitle) {
+          descripcion.innerText = 'No se encontró una versión en español para ese animal.';
+          return;
+        }
+
+        const wikiUrl = `https://es.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&titles=${encodeURIComponent(esTitle)}&origin=*`;
+        const wikiResponse = await fetch(wikiUrl);
+        const wikiData = await wikiResponse.json();
+
+        const esPages = wikiData.query.pages;
+        const esPageId = Object.keys(esPages)[0];
+
+        if (esPageId === '-1' || !esPages[esPageId].extract) {
+          descripcion.innerHTML = `<span class="text-neon fw-bold">Artículo: ${esTitle}</span><br><br>No se encontró texto en español, pero la clasificación fue exitosa.`;
+        } else {
+          descripcion.innerHTML = `<span class="text-neon fw-bold">Artículo exacto: ${esTitle}</span><br><br>${esPages[esPageId].extract}`;
+        }
+      } catch (error) {
+        descripcion.innerText = 'Error al conectar con la API de Wikipedia.';
+      }
+    });
+  </script>
+</body>
+</html>
